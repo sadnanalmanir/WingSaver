@@ -60,5 +60,5 @@ Copy [`.env.example`](.env.example) into `apps/api/.env` and `apps/web/.env.loca
 
 ## Status
 
-**PR 1 scaffold** — monorepo tooling, installable API package, Next.js skeleton, CI, local infra.
-Search, auth, Redis cache, and live providers land in subsequent PRs.
+**PR 2 complete** — API factory, pydantic-settings, request IDs, unified errors, CORS, `/health` + `/api/v1/ready`.
+Next: mock flight search (PR 3).

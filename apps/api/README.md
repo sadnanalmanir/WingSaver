@@ -19,7 +19,16 @@ Acceptance check (installable package, no `PYTHONPATH` hacks):
 
 ```bash
 uv run python -c "from wingsaver_api.main import app; print(app.title)"
+uv run fastapi dev   # OpenAPI at /docs without a path argument
 ```
+
+### Endpoints (PR 2)
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/health` | Liveness (no deps) |
+| GET | `/api/v1/health` | Versioned liveness |
+| GET | `/api/v1/ready` | Readiness (Redis required in staging/production) |
 
 ## Layout
 
