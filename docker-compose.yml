@@ -1,0 +1,35 @@
+# Local infrastructure for WingSaver development.
+# API and web run on the host (uv / pnpm); only Postgres and Redis are containerized.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: wingsaver
+      POSTGRES_PASSWORD: wingsaver
+      POSTGRES_DB: wingsaver
+    volumes:
+      - wingsaver_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wingsaver -d wingsaver"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - wingsaver_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  wingsaver_pg_data:
+  wingsaver_redis_data:

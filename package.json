@@ -1,0 +1,17 @@
+{
+  "name": "wingsaver",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev:web": "pnpm --filter @wingsaver/web dev",
+    "build:web": "pnpm --filter @wingsaver/web build",
+    "lint:web": "pnpm --filter @wingsaver/web lint",
+    "typecheck:web": "pnpm --filter @wingsaver/web typecheck",
+    "dev:api": "cd apps/api && uv run fastapi dev",
+    "test:api": "cd apps/api && uv run pytest",
+    "lint:api": "cd apps/api && uv run ruff check . && uv run ruff format --check ."
+  }
+}

@@ -1,0 +1,12 @@
+# Keep FastAPI Cloud uploads lean when deploying from apps/api
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+tests/
+*.md
+.env
+.env.*
