@@ -60,5 +60,5 @@ Copy [`.env.example`](.env.example) into `apps/api/.env` and `apps/web/.env.loca
 
 ## Status
 
-**PR 3 complete** — mock flight search, WingSaver offer IDs, server-side filter/sort/page, offer detail store.
-Next: Redis cache + rate limits (PR 4).
+**PR 4 complete** — Redis search/offer cache, stampede lock, Redis rate limits (memory fallback locally).
+Next: observability / Sentry (PR 5).

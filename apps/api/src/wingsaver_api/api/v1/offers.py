@@ -23,7 +23,7 @@ async def get_offer(
     offer_id: str,
     service: Annotated[SearchService, Depends(get_search_service)],
 ) -> OfferPublic:
-    offer = service.get_offer(offer_id)
+    offer = await service.get_offer(offer_id)
     if offer is None:
         raise AppError(
             code="OFFER_NOT_FOUND",

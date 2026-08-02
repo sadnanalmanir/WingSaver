@@ -72,8 +72,8 @@ class Offer(BaseModel):
     slices: list[Slice] = Field(..., min_length=1)
     baggage_summary: str | None = None
     expires_at: datetime | None = None
-    # Server-only: never serialize to public API responses
-    provider_payload: dict[str, Any] | None = Field(default=None, exclude=True)
+    # Server-only field: stored in Redis for future revalidation; stripped via to_public()
+    provider_payload: dict[str, Any] | None = None
 
     @field_validator("validating_airline")
     @classmethod

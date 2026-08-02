@@ -1,13 +1,15 @@
-"""Search orchestration: provider call, WingSaver ids, filter/sort/page."""
+"""Search orchestration: provider call, WingSaver ids, stampede, filter/sort/page."""
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from ulid import ULID
 
 from wingsaver_api.config import Settings
+from wingsaver_api.errors import AppError
 from wingsaver_api.providers.base import FlightProvider
 from wingsaver_api.schemas.offer import Offer, OfferPublic
 from wingsaver_api.schemas.search import (
@@ -15,7 +17,7 @@ from wingsaver_api.schemas.search import (
     SearchResponse,
     trip_identity_cache_key,
 )
-from wingsaver_api.services.offer_store import InMemoryOfferStore
+from wingsaver_api.services.offer_store import CachedSearch, OfferStore
 
 
 def new_offer_id(provider: str) -> str:
@@ -28,7 +30,7 @@ class SearchService:
         self,
         *,
         provider: FlightProvider,
-        store: InMemoryOfferStore,
+        store: OfferStore,
         settings: Settings,
     ) -> None:
         self.provider = provider
@@ -39,32 +41,16 @@ class SearchService:
         provider_name = getattr(self.provider, "name", self.settings.flight_provider)
         cache_key = trip_identity_cache_key(request, provider=provider_name)
 
-        cached = self.store.get_search(cache_key)
+        cached = await self.store.get_search(cache_key)
         cache_status: str
         if cached is None:
-            cache_status = "MISS"
-            raw_offers = await self.provider.search(request)
-            # Cap at 50 per design
-            raw_offers = raw_offers[:50]
-            offer_ids: list[str] = []
-            expires_at = datetime.now(UTC) + timedelta(
-                seconds=self.settings.offer_cache_ttl_seconds
-            )
-            for raw in raw_offers:
-                offer = self._assign_id(raw, provider_name=provider_name, expires_at=expires_at)
-                self.store.put_offer(offer, ttl_seconds=self.settings.offer_cache_ttl_seconds)
-                offer_ids.append(offer.id)
-            cached = self.store.put_search(
-                cache_key,
-                offer_ids,
-                ttl_seconds=self.settings.search_cache_ttl(),
-            )
+            cached, cache_status = await self._fill_on_miss(request, cache_key, provider_name)
         else:
             cache_status = "HIT"
 
         offers: list[Offer] = []
         for oid in cached.offer_ids:
-            found = self.store.get_offer(oid)
+            found = await self.store.get_offer(oid)
             if found is not None:
                 offers.append(found)
         filtered = self._apply_filters(offers, request)
@@ -84,11 +70,90 @@ class SearchService:
             offers=[o.to_public() for o in page_items],
         )
 
-    def get_offer(self, offer_id: str) -> OfferPublic | None:
-        offer = self.store.get_offer(offer_id)
+    async def get_offer(self, offer_id: str) -> OfferPublic | None:
+        offer = await self.store.get_offer(offer_id)
         if offer is None:
             return None
         return offer.to_public()
+
+    async def _fill_on_miss(
+        self,
+        request: SearchRequest,
+        cache_key: str,
+        provider_name: str,
+    ) -> tuple[CachedSearch, str]:
+        """Stampede-safe miss fill: one filler, waiters poll, else SEARCH_BUSY.
+
+        Returns ``(cached_search, cache_status)`` where status is MISS for the
+        filler (or double-check HIT if another writer finished) and HIT for waiters.
+        """
+        lock_ttl_ms = self.settings.stampede_lock_ttl_ms
+        wait_timeout_ms = self.settings.stampede_wait_timeout_ms
+
+        acquired = await self.store.try_acquire_lock(cache_key, ttl_ms=lock_ttl_ms)
+        if acquired:
+            try:
+                # Double-check after lock (another filler may have finished)
+                existing = await self.store.get_search(cache_key)
+                if existing is not None:
+                    return existing, "HIT"
+                filled = await self._call_provider_and_store(request, cache_key, provider_name)
+                return filled, "MISS"
+            finally:
+                await self.store.release_lock(cache_key)
+
+        # Waiter path: poll for search key
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + (wait_timeout_ms / 1000.0)
+        delay = 0.05
+        while loop.time() < deadline:
+            await asyncio.sleep(delay)
+            existing = await self.store.get_search(cache_key)
+            if existing is not None:
+                return existing, "HIT"
+            delay = min(delay * 1.5, 0.2)
+
+        raise AppError(
+            code="SEARCH_BUSY",
+            message="Search is busy; please retry shortly.",
+            status_code=503,
+            details={"retry_after": 1},
+        )
+
+    async def _call_provider_and_store(
+        self,
+        request: SearchRequest,
+        cache_key: str,
+        provider_name: str,
+    ) -> CachedSearch:
+        allowed = await self.store.try_begin_provider_call(
+            max_inflight=self.settings.provider_max_inflight
+        )
+        if not allowed:
+            raise AppError(
+                code="SEARCH_BUSY",
+                message="Too many concurrent provider searches; please retry.",
+                status_code=503,
+                details={"retry_after": 1},
+            )
+        try:
+            raw_offers = await self.provider.search(request)
+            raw_offers = raw_offers[:50]
+            offer_ids: list[str] = []
+            expires_at = datetime.now(UTC) + timedelta(
+                seconds=self.settings.offer_cache_ttl_seconds
+            )
+            for raw in raw_offers:
+                offer = self._assign_id(raw, provider_name=provider_name, expires_at=expires_at)
+                await self.store.put_offer(offer, ttl_seconds=self.settings.offer_cache_ttl_seconds)
+                offer_ids.append(offer.id)
+            return await self.store.put_search(
+                cache_key,
+                offer_ids,
+                ttl_seconds=self.settings.search_cache_ttl(),
+            )
+        finally:
+            await self.store.end_provider_call()
 
     def _assign_id(
         self,
@@ -99,7 +164,6 @@ class SearchService:
     ) -> Offer:
         public_id = new_offer_id(provider_name)
         payload = dict(offer.provider_payload or {})
-        # Preserve any temporary/upstream id inside server-only payload
         if offer.id and not offer.id.startswith(f"{provider_name}_"):
             payload.setdefault("upstream_temp_id", offer.id)
         return offer.model_copy(

@@ -29,8 +29,12 @@ uv run fastapi dev   # OpenAPI at /docs without a path argument
 | GET | `/health` | Liveness (no deps) |
 | GET | `/api/v1/health` | Versioned liveness |
 | GET | `/api/v1/ready` | Readiness (Redis required in staging/production) |
-| POST | `/api/v1/search` | Flight search (mock provider; server filter/sort/page) |
-| GET | `/api/v1/offers/{offer_id}` | Offer detail from in-memory store (Redis in PR 4) |
+| POST | `/api/v1/search` | Flight search (cache + stampede + rate limit; server filter/sort/page) |
+| GET | `/api/v1/offers/{offer_id}` | Offer detail from Redis/`offer:v1:*` or in-memory store |
+
+### Redis (PR 4)
+
+Set `REDIS_URL` (see root `.env.example` / `docker compose up -d`). Without Redis, local uses in-memory store and **fail-open** rate limits. Production requires Redis (`validate_runtime`).
 
 ## Layout
 

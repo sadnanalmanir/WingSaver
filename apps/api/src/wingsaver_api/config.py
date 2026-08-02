@@ -52,6 +52,11 @@ class Settings(BaseSettings):
     http_timeout_seconds: float = 25.0
     trusted_proxy_hops: int = 1
 
+    # Stampede control (search miss fill)
+    stampede_lock_ttl_ms: int = 30_000
+    stampede_wait_timeout_ms: int = 2_500
+    provider_max_inflight: int = 20
+
     db_pool_size: int = 5
     db_max_overflow: int = 5
     redis_max_connections: int = 20

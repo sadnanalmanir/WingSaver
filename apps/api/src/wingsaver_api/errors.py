@@ -80,6 +80,15 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(AppError)
     async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
         request_id = get_request_id(request)
+        headers: dict[str, str] = {}
+        if exc.status_code == 429 or exc.code == "SEARCH_BUSY":
+            retry = 1
+            if isinstance(exc.details, dict) and "retry_after" in exc.details:
+                try:
+                    retry = int(exc.details["retry_after"])
+                except (TypeError, ValueError):
+                    retry = 1
+            headers["Retry-After"] = str(retry)
         return JSONResponse(
             status_code=exc.status_code,
             content=error_body(
@@ -88,6 +97,7 @@ def register_exception_handlers(app: FastAPI) -> None:
                 request_id=request_id,
                 details=exc.details,
             ),
+            headers=headers,
         )
 
     @app.exception_handler(RequestValidationError)

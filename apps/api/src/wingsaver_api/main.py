@@ -17,7 +17,8 @@ from wingsaver_api.errors import register_exception_handlers
 from wingsaver_api.logging import configure_logging
 from wingsaver_api.middleware.request_id import RequestIdMiddleware
 from wingsaver_api.providers.mock import MockFlightProvider
-from wingsaver_api.services.offer_store import InMemoryOfferStore
+from wingsaver_api.services.offer_store import InMemoryOfferStore, RedisOfferStore
+from wingsaver_api.services.rate_limit import RateLimiter
 
 logger = structlog.get_logger(__name__)
 
@@ -28,8 +29,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     configure_logging(settings)
 
     app.state.redis = None
-    app.state.offer_store = InMemoryOfferStore()
-    # Provider selection expands in Amadeus PR; mock is the PR3 default path.
     app.state.flight_provider = MockFlightProvider()
     app.state.http = httpx.AsyncClient(
         timeout=httpx.Timeout(settings.http_timeout_seconds),
@@ -46,6 +45,21 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         except Exception as exc:  # noqa: BLE001 — boot continues; readiness reports failure
             logger.error("redis_connect_failed", error=str(exc))
             app.state.redis = None
+
+    if app.state.redis is not None:
+        app.state.offer_store = RedisOfferStore(app.state.redis)
+        logger.info("offer_store_backend", backend="redis")
+    else:
+        app.state.offer_store = InMemoryOfferStore()
+        if settings.environment != "local":
+            logger.warning("offer_store_backend", backend="memory", reason="redis_unavailable")
+        else:
+            logger.info("offer_store_backend", backend="memory")
+
+    app.state.rate_limiter = RateLimiter(
+        app.state.redis,
+        fail_open=settings.rate_limit_fail_open,
+    )
 
     yield
 
@@ -79,7 +93,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
-        expose_headers=["X-Request-ID", "X-RateLimit-Remaining", "X-Cache"],
+        expose_headers=[
+            "X-Request-ID",
+            "X-RateLimit-Remaining",
+            "X-RateLimit-Limit",
+            "X-Cache",
+            "Retry-After",
+        ],
         allow_origin_regex=resolved.cors_origin_regex,
     )
     app.add_middleware(RequestIdMiddleware)
