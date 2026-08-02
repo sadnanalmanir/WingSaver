@@ -60,5 +60,5 @@ Copy [`.env.example`](.env.example) into `apps/api/.env` and `apps/web/.env.loca
 
 ## Status
 
-**PR 2 complete** — API factory, pydantic-settings, request IDs, unified errors, CORS, `/health` + `/api/v1/ready`.
-Next: mock flight search (PR 3).
+**PR 3 complete** — mock flight search, WingSaver offer IDs, server-side filter/sort/page, offer detail store.
+Next: Redis cache + rate limits (PR 4).

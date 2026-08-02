@@ -55,3 +55,5 @@ def test_openapi_available(client: TestClient) -> None:
     paths = body["paths"]
     assert "/health" in paths
     assert "/api/v1/ready" in paths
+    assert "/api/v1/search" in paths
+    assert "/api/v1/offers/{offer_id}" in paths

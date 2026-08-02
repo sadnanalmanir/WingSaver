@@ -16,6 +16,8 @@ from wingsaver_api.db.redis import close_redis_pool, create_redis_pool
 from wingsaver_api.errors import register_exception_handlers
 from wingsaver_api.logging import configure_logging
 from wingsaver_api.middleware.request_id import RequestIdMiddleware
+from wingsaver_api.providers.mock import MockFlightProvider
+from wingsaver_api.services.offer_store import InMemoryOfferStore
 
 logger = structlog.get_logger(__name__)
 
@@ -26,6 +28,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     configure_logging(settings)
 
     app.state.redis = None
+    app.state.offer_store = InMemoryOfferStore()
+    # Provider selection expands in Amadeus PR; mock is the PR3 default path.
+    app.state.flight_provider = MockFlightProvider()
     app.state.http = httpx.AsyncClient(
         timeout=httpx.Timeout(settings.http_timeout_seconds),
         headers={"User-Agent": "WingSaver-API/0.1"},

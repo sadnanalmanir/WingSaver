@@ -20,6 +20,7 @@ dependencies = [
   "pwdlib[argon2]>=0.2.0",
   "structlog>=24.0",
   "sentry-sdk[fastapi]>=2.0",
+  "python-ulid>=4.0.1",
 ]
 
 [dependency-groups]
