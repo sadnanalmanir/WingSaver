@@ -2,8 +2,26 @@
   "name": "@wingsaver/openapi",
   "version": "0.1.0",
   "private": true,
-  "description": "Exported OpenAPI document and generated TypeScript client (populated in a later PR)",
+  "description": "Exported OpenAPI document and generated TypeScript types for WingSaver API",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.ts",
+    "./openapi.json": "./openapi.json"
+  },
+  "files": [
+    "openapi.json",
+    "src"
+  ],
   "scripts": {
-    "check": "node -e \"console.log('OpenAPI package placeholder — codegen lands in PR 7')\""
+    "export": "cd ../../apps/api && uv run python scripts/export_openapi.py",
+    "generate": "openapi-typescript openapi.json -o src/schema.ts",
+    "build": "pnpm run generate",
+    "check": "node ./scripts/check-drift.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.6.1",
+    "typescript": "^5.7.0"
   }
 }

@@ -39,6 +39,39 @@ jobs:
       - name: Pytest
         run: uv run pytest
 
+  openapi:
+    name: OpenAPI (export drift check)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install API dependencies
+        working-directory: apps/api
+        run: uv sync --all-groups
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install JS dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check OpenAPI artifacts are up to date
+        run: pnpm openapi:check
+
   web:
     name: Web (lint, typecheck, build)
     runs-on: ubuntu-latest

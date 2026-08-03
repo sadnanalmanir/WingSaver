@@ -48,6 +48,8 @@ Copy [`.env.example`](.env.example) into `apps/api/.env` and `apps/web/.env.loca
 | `pnpm dev:web` | Next.js dev server |
 | `pnpm build:web` | Production web build |
 | `pnpm lint:web` / `typecheck:web` | Frontend checks |
+| `pnpm openapi:sync` | Export OpenAPI + regenerate TS types |
+| `pnpm openapi:check` | Fail if OpenAPI artifacts are stale (CI) |
 | `cd apps/api && uv run fastapi dev` | API dev server |
 | `cd apps/api && uv run pytest` | API tests |
 
@@ -62,5 +64,5 @@ Full setup, secrets, env matrix, and XFF verification: **[`docs/deploy.md`](docs
 
 ## Status
 
-**PR 6 complete** — staging CD (FastAPI Cloud via Actions; Vercel web wiring). See [`docs/deploy.md`](docs/deploy.md).
-Next: OpenAPI export + typed TS client (PR 7).
+**PR 7 complete** — OpenAPI export + generated TypeScript types (`packages/openapi`). See `pnpm openapi:sync`.
+Next: Next.js search UX (PR 8).

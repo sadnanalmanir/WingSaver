@@ -12,6 +12,10 @@
     "typecheck:web": "pnpm --filter @wingsaver/web typecheck",
     "dev:api": "cd apps/api && uv run fastapi dev",
     "test:api": "cd apps/api && uv run pytest",
-    "lint:api": "cd apps/api && uv run ruff check . && uv run ruff format --check ."
+    "lint:api": "cd apps/api && uv run ruff check . && uv run ruff format --check .",
+    "openapi:export": "cd apps/api && uv run python scripts/export_openapi.py",
+    "openapi:generate": "pnpm --filter @wingsaver/openapi generate",
+    "openapi:sync": "pnpm openapi:export && pnpm openapi:generate",
+    "openapi:check": "pnpm --filter @wingsaver/openapi check"
   }
 }
