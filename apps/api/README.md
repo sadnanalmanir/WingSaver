@@ -36,6 +36,29 @@ uv run fastapi dev   # OpenAPI at /docs without a path argument
 
 Set `REDIS_URL` (see root `.env.example` / `docker compose up -d`). Without Redis, local uses in-memory store and **fail-open** rate limits. Production requires Redis (`validate_runtime`).
 
+### Observability & security (PR 5)
+
+| Item | Behavior |
+|------|----------|
+| **Sentry** | Set `SENTRY_DSN` to enable; no-op when unset. `send_default_pii=False`. |
+| **Logs** | structlog JSON outside local; sensitive keys (`password`, `token`, `secret`, …) redacted; emails partially masked. |
+| **Security headers** | `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`. |
+| **Docs lockdown** | Production: `/docs` and `/openapi.json` disabled. |
+
+#### Ops runbook (errors)
+
+1. Check Sentry (if DSN set) for exception spikes before Amadeus go-live.
+2. Correlate with `X-Request-ID` / log `request_id`.
+3. Uptime: probe unversioned `GET /health` (not `/ready` alone).
+4. Live provider incident: set `FLIGHT_PROVIDER=mock` and redeploy (rollback path).
+
+### Deploy (PR 6)
+
+- Staging: push to `main` (paths under `apps/api/**`) → [`.github/workflows/deploy-api.yml`](../../.github/workflows/deploy-api.yml)
+- Production: Actions → **Deploy API** → `workflow_dispatch` → `production` (protect the GitHub Environment)
+- Secret: `FASTAPI_CLOUD_TOKEN`
+- Details: [`docs/deploy.md`](../../docs/deploy.md)
+
 ## Layout
 
 - `src/wingsaver_api/` — application package

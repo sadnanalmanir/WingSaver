@@ -55,10 +55,12 @@ Copy [`.env.example`](.env.example) into `apps/api/.env` and `apps/web/.env.loca
 
 | App | Host | Notes |
 |-----|------|--------|
-| `apps/api` | [FastAPI Cloud](https://fastapicloud.com/) | `pyproject.toml` entrypoint `wingsaver_api.main:app` |
-| `apps/web` | [Vercel](https://vercel.com/) | Project root = `apps/web` |
+| `apps/api` | [FastAPI Cloud](https://fastapicloud.com/) | `pyproject.toml` entrypoint `wingsaver_api.main:app`; CD via Actions |
+| `apps/web` | [Vercel](https://vercel.com/) | Project root = `apps/web`; prefer Git integration |
+
+Full setup, secrets, env matrix, and XFF verification: **[`docs/deploy.md`](docs/deploy.md)**.
 
 ## Status
 
-**PR 4 complete** — Redis search/offer cache, stampede lock, Redis rate limits (memory fallback locally).
-Next: observability / Sentry (PR 5).
+**PR 6 complete** — staging CD (FastAPI Cloud via Actions; Vercel web wiring). See [`docs/deploy.md`](docs/deploy.md).
+Next: OpenAPI export + typed TS client (PR 7).

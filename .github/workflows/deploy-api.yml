@@ -1,0 +1,122 @@
+# Deploy WingSaver API to FastAPI Cloud.
+#
+# Secrets (repo or environment-scoped):
+#   FASTAPI_CLOUD_TOKEN   — CLI token from FastAPI Cloud
+#   FASTAPI_CLOUD_APP_ID  — optional; staging vs production app IDs
+#
+# Environments (GitHub → Settings → Environments):
+#   staging     — auto on push to main when apps/api changes
+#   production  — manual workflow_dispatch only (add required reviewers)
+#
+# First-time setup: create the FastAPI Cloud app(s), set env vars/secrets there
+# (REDIS_URL, JWT_SECRET, CORS_ORIGINS, SENTRY_DSN, …), then add the token here.
+
+name: Deploy API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/**"
+      - ".github/workflows/deploy-api.yml"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Deploy target
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+        default: staging
+
+concurrency:
+  group: deploy-api-${{ github.event.inputs.target || 'staging' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-staging:
+    name: Deploy staging (FastAPI Cloud)
+    if: >
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'staging')
+    runs-on: ubuntu-latest
+    environment: staging
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install project
+        run: uv sync --no-dev
+
+      - name: Deploy to FastAPI Cloud
+        env:
+          FASTAPI_CLOUD_TOKEN: ${{ secrets.FASTAPI_CLOUD_TOKEN }}
+          FASTAPI_CLOUD_APP_ID: ${{ secrets.FASTAPI_CLOUD_APP_ID }}
+        run: |
+          if [ -z "$FASTAPI_CLOUD_TOKEN" ]; then
+            echo "::error::FASTAPI_CLOUD_TOKEN secret is not set for the staging environment (or repository)."
+            exit 1
+          fi
+          # Deploy from apps/api (entrypoint wingsaver_api.main:app).
+          # Optional FASTAPI_CLOUD_APP_ID selects the staging app explicitly.
+          ARGS=()
+          if [ -n "$FASTAPI_CLOUD_APP_ID" ]; then
+            ARGS+=(--app-id "$FASTAPI_CLOUD_APP_ID")
+          fi
+          uv run fastapi deploy --no-wait "${ARGS[@]}"
+
+      - name: Post-deploy checklist (manual)
+        run: |
+          echo "After deploy, verify on staging:"
+          echo "  1. GET /health"
+          echo "  2. GET /api/v1/ready  (Redis must be configured)"
+          echo "  3. POST /api/v1/search smoke"
+          echo "  4. Confirm TRUSTED_PROXY_HOPS / X-Forwarded-For client IP (see docs/deploy.md)"
+
+  deploy-production:
+    name: Deploy production (FastAPI Cloud)
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'production'
+    runs-on: ubuntu-latest
+    environment: production
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install project
+        run: uv sync --no-dev
+
+      - name: Deploy to FastAPI Cloud
+        env:
+          FASTAPI_CLOUD_TOKEN: ${{ secrets.FASTAPI_CLOUD_TOKEN }}
+          FASTAPI_CLOUD_APP_ID: ${{ secrets.FASTAPI_CLOUD_APP_ID }}
+        run: |
+          if [ -z "$FASTAPI_CLOUD_TOKEN" ]; then
+            echo "::error::FASTAPI_CLOUD_TOKEN secret is not set for the production environment."
+            exit 1
+          fi
+          ARGS=()
+          if [ -n "$FASTAPI_CLOUD_APP_ID" ]; then
+            ARGS+=(--app-id "$FASTAPI_CLOUD_APP_ID")
+          fi
+          uv run fastapi deploy --no-wait "${ARGS[@]}"
