@@ -64,5 +64,5 @@ Full setup, secrets, env matrix, and XFF verification: **[`docs/deploy.md`](docs
 
 ## Status
 
-**PR 7 complete** — OpenAPI export + generated TypeScript types (`packages/openapi`). See `pnpm openapi:sync`.
-Next: Next.js search UX (PR 8).
+**PR 8 complete** — Next.js search form, results (URL-driven filters/sort/page), offer detail, fare disclaimer.
+Next: Auth + Postgres (PR 9), or Playwright e2e (PR 12).

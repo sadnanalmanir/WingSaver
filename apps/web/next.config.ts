@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   // Monorepo: pin tracing root so a parent package-lock.json cannot confuse Next.
   outputFileTracingRoot: path.join(appDir, "../.."),
+  transpilePackages: ["@wingsaver/openapi"],
 };
 
 export default nextConfig;

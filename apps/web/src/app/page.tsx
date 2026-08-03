@@ -1,17 +1,21 @@
+import { SearchForm } from "@/components/search-form";
+import { getApiBaseUrl } from "@/lib/api-client";
+
 export default function HomePage() {
   return (
-    <main className="page">
-      <header className="hero">
+    <main>
+      <section className="home-hero">
         <p className="eyebrow">WingSaver</p>
-        <h1>Airline search, done right</h1>
+        <h1 className="h1">Airline search, done right</h1>
         <p className="lede">
-          Production-grade flight search. Scaffold is live — search UI arrives in a later PR.
+          Search one-way or round-trip flights. Filters and sort run on the server.
+          Prices are estimates in the provider&apos;s currency — not a booking lock.
         </p>
-        <p className="meta">
-          API base:{" "}
-          <code>{process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000"}</code>
-        </p>
-      </header>
+      </section>
+      <SearchForm />
+      <p className="muted small" style={{ marginTop: "1rem" }}>
+        API: <code>{getApiBaseUrl()}</code>
+      </p>
     </main>
   );
 }

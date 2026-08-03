@@ -8,4 +8,4 @@
  *   import type { paths } from "@wingsaver/openapi/schema";
  */
 
-export type { paths, components, operations, webhooks } from "./schema.js";
+export type { paths, components, operations, webhooks } from "./schema";
