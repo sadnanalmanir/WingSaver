@@ -16,6 +16,8 @@ from wingsaver_api.db.redis import close_redis_pool, create_redis_pool
 from wingsaver_api.errors import register_exception_handlers
 from wingsaver_api.logging import configure_logging
 from wingsaver_api.middleware.request_id import RequestIdMiddleware
+from wingsaver_api.middleware.security_headers import SecurityHeadersMiddleware
+from wingsaver_api.observability import init_sentry
 from wingsaver_api.providers.mock import MockFlightProvider
 from wingsaver_api.services.offer_store import InMemoryOfferStore, RedisOfferStore
 from wingsaver_api.services.rate_limit import RateLimiter
@@ -75,18 +77,22 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     """
     resolved = settings or get_settings()
     resolved.validate_runtime()
+    init_sentry(resolved)
 
+    is_production = resolved.environment == "production"
     app = FastAPI(
         title="WingSaver API",
         version="0.1.0",
         description="Airline search API",
         lifespan=lifespan,
-        docs_url="/docs" if resolved.environment != "production" else None,
+        # Production docs lockdown: no Swagger UI / OpenAPI JSON exposure
+        docs_url=None if is_production else "/docs",
         redoc_url=None,
+        openapi_url=None if is_production else "/openapi.json",
     )
     app.state.settings = resolved
 
-    # Middleware order: last added runs first on request (RequestId outermost).
+    # Middleware order: last added runs first on request.
     app.add_middleware(
         CORSMiddleware,
         allow_origins=resolved.cors_origins,
@@ -102,6 +108,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         ],
         allow_origin_regex=resolved.cors_origin_regex,
     )
+    app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RequestIdMiddleware)
 
     register_exception_handlers(app)

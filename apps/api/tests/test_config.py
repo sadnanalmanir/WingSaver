@@ -4,12 +4,21 @@ from __future__ import annotations
 
 import pytest
 
-from wingsaver_api.config import Settings
+from wingsaver_api.config import Settings, clear_settings_cache
 
 
 def test_cors_origins_parse_from_csv() -> None:
     settings = Settings(cors_origins="http://a.example, http://b.example")  # type: ignore[arg-type]
     assert settings.cors_origins == ["http://a.example", "http://b.example"]
+
+
+def test_cors_origins_from_dotenv_style_string(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Regression: plain CORS_ORIGINS=http://localhost:3000 must not SettingsError."""
+    monkeypatch.setenv("CORS_ORIGINS", "http://localhost:3000")
+    clear_settings_cache()
+    settings = Settings(_env_file=None)  # type: ignore[call-arg]
+    assert settings.cors_origins == ["http://localhost:3000"]
+    clear_settings_cache()
 
 
 def test_search_cache_ttl_by_provider() -> None:

@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -29,7 +29,11 @@ class Settings(BaseSettings):
     database_url_direct: str | None = None
     redis_url: str | None = None
 
-    cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
+    # NoDecode: env values are plain strings (comma-separated), not JSON lists.
+    # Without this, CORS_ORIGINS=http://localhost:3000 fails DotEnv parsing.
+    cors_origins: Annotated[list[str], NoDecode] = Field(
+        default_factory=lambda: ["http://localhost:3000"]
+    )
     # Vercel preview regex; None/empty disables allow_origin_regex
     cors_origin_regex: str | None = None
 
@@ -69,7 +73,16 @@ class Settings(BaseSettings):
     @classmethod
     def parse_cors_origins(cls, value: object) -> object:
         if isinstance(value, str):
-            return [origin.strip() for origin in value.split(",") if origin.strip()]
+            # Support comma-separated and optional JSON-array strings
+            text = value.strip()
+            if text.startswith("[") and text.endswith("]"):
+                import json
+
+                parsed = json.loads(text)
+                if not isinstance(parsed, list):
+                    raise ValueError("CORS_ORIGINS JSON must be a list of strings")
+                return [str(origin).strip() for origin in parsed if str(origin).strip()]
+            return [origin.strip() for origin in text.split(",") if origin.strip()]
         return value
 
     @field_validator("cors_origin_regex", mode="before")
