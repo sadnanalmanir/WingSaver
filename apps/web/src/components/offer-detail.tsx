@@ -1,7 +1,5 @@
-"use client";
-
 import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 
 import { ErrorPanel } from "@/components/error-panel";
 import { PriceDisclaimer } from "@/components/price-disclaimer";
@@ -42,7 +40,7 @@ export function OfferDetail({ offerId }: { offerId: string }) {
         {expired ? (
           <p>
             Offers are only kept for a limited time.{" "}
-            <Link href="/">Search again</Link> for current prices.
+            <Link to="/">Search again</Link> for current prices.
           </p>
         ) : null}
       </div>
@@ -62,7 +60,7 @@ export function OfferDetail({ offerId }: { offerId: string }) {
             {offer.cabin_class.replaceAll("_", " ")} · provider {offer.provider}
           </p>
         </div>
-        <Link className="btn secondary" href="/">
+        <Link className="btn secondary" to="/">
           New search
         </Link>
       </header>
@@ -76,8 +74,8 @@ export function OfferDetail({ offerId }: { offerId: string }) {
       {offer.slices.map((slice) => (
         <section key={`${slice.direction}-${slice.duration_minutes}`} className="panel">
           <h2 className="h2">
-            {slice.direction === "outbound" ? "Outbound" : "Return"} ·{" "}
-            {stopsLabel(slice.stops)} · {formatDuration(slice.duration_minutes)}
+            {slice.direction === "outbound" ? "Outbound" : "Return"} · {stopsLabel(slice.stops)}{" "}
+            · {formatDuration(slice.duration_minutes)}
           </h2>
           <ol className="segments">
             {slice.segments.map((seg, idx) => (
@@ -103,7 +101,9 @@ export function OfferDetail({ offerId }: { offerId: string }) {
       ))}
 
       {offer.expires_at ? (
-        <p className="muted small">Offer cache expires around {formatDateTime(offer.expires_at)}.</p>
+        <p className="muted small">
+          Offer cache expires around {formatDateTime(offer.expires_at)}.
+        </p>
       ) : null}
     </article>
   );

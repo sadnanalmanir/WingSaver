@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "react-router-dom";
 
 import {
   formatDateTime,
@@ -48,7 +48,7 @@ export function OfferCard({ offer }: { offer: OfferPublic }) {
       <div className="offer-side">
         <p className="price">{formatMoney(offer.price)}</p>
         <p className="muted small">Total trip {formatDuration(totalDuration(offer))}</p>
-        <Link className="btn secondary" href={`/flights/${encodeURIComponent(offer.id)}`}>
+        <Link className="btn secondary" to={`/flights/${encodeURIComponent(offer.id)}`}>
           View details
         </Link>
       </div>

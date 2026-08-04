@@ -1,7 +1,5 @@
-"use client";
-
-import { useRouter } from "next/navigation";
 import { useMemo, useState, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { AIRPORTS, airportLabel } from "@/lib/airports";
 import {
@@ -16,7 +14,7 @@ type Props = {
 };
 
 export function SearchForm({ initial, submitLabel = "Search flights" }: Props) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [form, setForm] = useState<SearchFormState>(() => ({
     ...defaultFormState(),
     ...initial,
@@ -38,8 +36,13 @@ export function SearchForm({ initial, submitLabel = "Search flights" }: Props) {
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
-    const next = { ...form, page: 1, origin: form.origin.toUpperCase(), destination: form.destination.toUpperCase() };
-    router.push(searchHref(next));
+    const next = {
+      ...form,
+      page: 1,
+      origin: form.origin.toUpperCase(),
+      destination: form.destination.toUpperCase(),
+    };
+    navigate(searchHref(next));
   }
 
   return (

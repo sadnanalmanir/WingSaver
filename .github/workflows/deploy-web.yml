@@ -1,4 +1,4 @@
-# Optional GitHub Actions deploy for the Next.js app.
+# Optional GitHub Actions deploy for the Vite SPA.
 # Preferred v1 path: link the GitHub repo in the Vercel dashboard
 # (Root Directory = apps/web) so previews + production deploy automatically.
 #

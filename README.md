@@ -3,16 +3,17 @@
 [![CI](https://github.com/sadnanalmanir/WingSaver/actions/workflows/ci.yml/badge.svg)](https://github.com/sadnanalmanir/WingSaver/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/downloads/)
-[![Next.js 15](https://img.shields.io/badge/Next.js-15-black.svg)](https://nextjs.org/)
+[![Vite](https://img.shields.io/badge/Vite-6-646CFF.svg)](https://vitejs.dev/)
+[![React 19](https://img.shields.io/badge/React-19-61DAFB.svg)](https://react.dev/)
 
-**Production-minded airline search** — FastAPI backend + Next.js frontend, built as a monorepo with Redis caching, rate limiting, OpenAPI-typed clients, and CI that keeps the contract honest.
+**Production-minded airline search** — FastAPI backend + React (Vite/TypeScript) frontend, built as a monorepo with Redis caching, rate limiting, OpenAPI-typed clients, and CI that keeps the contract honest.
 
 Search is **search-only** (no booking). Inventory uses a **provider adapter** (mock today; Amadeus/Duffel path designed in).
 
 | | |
 |---|---|
 | **API** | FastAPI · Redis · structlog · Sentry · pytest/ruff/mypy |
-| **Web** | Next.js App Router · React 19 · TanStack Query · TypeScript |
+| **Web** | Vite · React 19 · React Router · TanStack Query · TypeScript |
 | **Contract** | OpenAPI export → generated TS types · drift check in CI |
 | **Deploy** | FastAPI Cloud (API) · Vercel (web) · GitHub Actions CD |
 
@@ -48,8 +49,8 @@ A realistic full-stack slice of a flight meta-search product, emphasizing **back
 
 ```text
 ┌─────────────────┐     POST /api/v1/search      ┌──────────────────────┐
-│  Next.js (web)  │ ───────────────────────────► │  FastAPI (api)       │
-│  Vercel         │     GET  /api/v1/offers/:id  │  · SearchService     │
+│  React SPA (web)│ ───────────────────────────► │  FastAPI (api)       │
+│  Vite · Vercel  │     GET  /api/v1/offers/:id  │  · SearchService     │
 └─────────────────┘ ◄─────────────────────────── │  · RateLimiter       │
                                                  │  · FlightProvider    │
                                                  └──────────┬───────────┘
@@ -63,7 +64,7 @@ A realistic full-stack slice of a flight meta-search product, emphasizing **back
 | Path | Role |
 |------|------|
 | `apps/api` | Installable `wingsaver_api` package; FastAPI Cloud deploy root |
-| `apps/web` | Next.js App Router; Vercel project root |
+| `apps/web` | Vite + React SPA; Vercel project root |
 | `packages/openapi` | Exported `openapi.json` + generated TypeScript types |
 | `docs/` | System design and deploy runbook |
 
@@ -111,8 +112,8 @@ With `FLIGHT_PROVIDER=mock` (default), no third-party API keys are required.
 
 | Command | Description |
 |---------|-------------|
-| `pnpm dev:web` | Next.js dev server |
-| `pnpm build:web` | Production web build |
+| `pnpm dev:web` | Vite dev server (port 3000) |
+| `pnpm build:web` | Production SPA build (`apps/web/dist`) |
 | `pnpm lint:web` / `typecheck:web` | Frontend checks |
 | `pnpm openapi:sync` | Export OpenAPI + regenerate TS types |
 | `pnpm openapi:check` | Fail if OpenAPI artifacts are stale (CI) |

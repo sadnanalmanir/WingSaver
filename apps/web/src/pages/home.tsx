@@ -1,7 +1,7 @@
 import { SearchForm } from "@/components/search-form";
 import { getApiBaseUrl } from "@/lib/api-client";
 
-export default function HomePage() {
+export function HomePage() {
   return (
     <main>
       <section className="home-hero">

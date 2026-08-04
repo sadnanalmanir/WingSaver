@@ -16,7 +16,7 @@
 
 ## Overview
 
-WingSaver is a production-quality airline search product: users specify origin, destination, dates, passengers, and cabin class; the system returns filterable, sortable flight offers with detail views. The stack is **Python FastAPI** on the backend (deployed to **FastAPI Cloud**) and **React via Next.js App Router** on the frontend (deployed to **Vercel**).
+WingSaver is a production-quality airline search product: users specify origin, destination, dates, passengers, and cabin class; the system returns filterable, sortable flight offers with detail views. The stack is **Python FastAPI** on the backend (deployed to **FastAPI Cloud**) and a **Vite + React + TypeScript SPA** on the frontend (deployed to **Vercel**).
 
 This design defines a monorepo, adapter-based flight inventory (mock seed for MVP, Amadeus/Duffel for production), Redis-backed search caching, optional Postgres for accounts and saved searches, anonymous-first UX with optional JWT accounts, and full production concerns: config, CORS, rate limiting, observability, CI/CD, testing, and security. The repository is greenfield; all structure and patterns below are proposed from first principles, aligned with FastAPI Cloud and Vercel constraints (ephemeral instances, env/secrets, managed Neon/Redis integrations).
 
@@ -26,7 +26,7 @@ This design defines a monorepo, adapter-based flight inventory (mock seed for MV
 
 ### Current state
 
-- Monorepo on `main` with FastAPI API, Next.js web, OpenAPI package, CI/CD, and mock search MVP.
+- Monorepo on `main` with FastAPI API, Vite/React web SPA, OpenAPI package, CI/CD, and mock search MVP.
 - Product requirement: searchable flight inventory with production-grade API and modern web UX.
 - Hard constraints: Python backend, React frontend, FastAPI Cloud + Vercel deploy paths.
 

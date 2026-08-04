@@ -2,7 +2,7 @@ import type { OfferPublic, SearchRequest, SearchResponse } from "@/lib/types";
 import { ApiError, type ApiErrorBody } from "@/lib/types";
 
 function apiBase(): string {
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
+  const base = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
   return base.replace(/\/$/, "");
 }
 

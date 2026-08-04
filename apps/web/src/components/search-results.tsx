@@ -1,9 +1,6 @@
-"use client";
-
 import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { ErrorPanel } from "@/components/error-panel";
 import { OfferCard } from "@/components/offer-card";
@@ -30,9 +27,8 @@ function ResultsSkeleton() {
 }
 
 export function SearchResults() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const form = useMemo(() => formFromSearchParams(searchParams), [searchParams]);
   const body = useMemo(() => formToSearchRequest(form), [form]);
 
@@ -43,7 +39,7 @@ export function SearchResults() {
 
   function patchForm(patch: Partial<SearchFormState>) {
     const next = { ...form, ...patch };
-    router.push(`${pathname}?${formToSearchParams(next).toString()}`);
+    navigate({ pathname: "/search", search: formToSearchParams(next).toString() });
   }
 
   const totalPages = query.data
@@ -116,7 +112,9 @@ export function SearchResults() {
             </h1>
             <p className="muted">
               {form.departure_date}
-              {form.trip_type === "round_trip" && form.return_date ? ` · return ${form.return_date}` : ""}
+              {form.trip_type === "round_trip" && form.return_date
+                ? ` · return ${form.return_date}`
+                : ""}
               {` · ${form.adults} adult${form.adults === 1 ? "" : "s"}`}
             </p>
           </div>
@@ -132,9 +130,7 @@ export function SearchResults() {
 
         {query.isLoading || query.isFetching ? <ResultsSkeleton /> : null}
 
-        {query.isError ? (
-          <ErrorPanel error={query.error} title="Search failed" />
-        ) : null}
+        {query.isError ? <ErrorPanel error={query.error} title="Search failed" /> : null}
 
         {query.isSuccess && query.data.offers.length === 0 ? (
           <div className="panel empty">
@@ -142,7 +138,7 @@ export function SearchResults() {
             <p className="muted">
               Try relaxing filters (stops, price, airlines) or changing dates.
             </p>
-            <Link className="btn secondary" href="/">
+            <Link className="btn secondary" to="/">
               New search
             </Link>
           </div>

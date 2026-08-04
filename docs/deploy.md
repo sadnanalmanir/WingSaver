@@ -5,7 +5,7 @@
 | App | Host | Deploy root | Default CD |
 |-----|------|-------------|------------|
 | API | [FastAPI Cloud](https://fastapicloud.com/) | `apps/api` | GitHub Actions → `fastapi deploy` |
-| Web | [Vercel](https://vercel.com/) | `apps/web` | Vercel Git integration (preferred) |
+| Web | [Vercel](https://vercel.com/) | `apps/web` (Vite SPA) | Vercel Git integration (preferred) |
 
 Design default (v1): **Actions + `FASTAPI_CLOUD_TOKEN`** for API; **Vercel Git** for web.
 
@@ -65,9 +65,10 @@ uv run fastapi deploy --no-wait
 | Setting | Value |
 |---------|--------|
 | Root Directory | `apps/web` |
-| Framework | Next.js |
+| Framework | Vite |
 | Production branch | `main` |
-| Env `NEXT_PUBLIC_API_BASE_URL` | Staging/prod API HTTPS origin (no trailing slash) |
+| Output directory | `dist` |
+| Env `VITE_API_BASE_URL` | Staging/prod API HTTPS origin (no trailing slash) |
 
 Previews deploy per PR automatically. Configure CORS on the API (`CORS_ORIGINS` + optional `CORS_ORIGIN_REGEX`) to allow the Vercel host(s).
 
@@ -104,7 +105,7 @@ Platform hop count is **not assumed final**. On first staging deploy:
 ### Web
 
 1. Open the Vercel URL.
-2. Confirm `NEXT_PUBLIC_API_BASE_URL` points at the staging API.
+2. Confirm `VITE_API_BASE_URL` points at the staging API.
 3. Browser network tab: search requests succeed (CORS OK).
 
 ---
