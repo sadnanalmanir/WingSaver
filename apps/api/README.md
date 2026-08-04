@@ -32,11 +32,11 @@ uv run fastapi dev   # OpenAPI at /docs without a path argument
 | POST | `/api/v1/search` | Flight search (cache + stampede + rate limit; server filter/sort/page) |
 | GET | `/api/v1/offers/{offer_id}` | Offer detail from Redis/`offer:v1:*` or in-memory store |
 
-### Redis (PR 4)
+### Redis
 
 Set `REDIS_URL` (see root `.env.example` / `docker compose up -d`). Without Redis, local uses in-memory store and **fail-open** rate limits. Production requires Redis (`validate_runtime`).
 
-### Observability & security (PR 5)
+### Observability & security
 
 | Item | Behavior |
 |------|----------|
@@ -52,7 +52,7 @@ Set `REDIS_URL` (see root `.env.example` / `docker compose up -d`). Without Redi
 3. Uptime: probe unversioned `GET /health` (not `/ready` alone).
 4. Live provider incident: set `FLIGHT_PROVIDER=mock` and redeploy (rollback path).
 
-### Deploy (PR 6)
+### Deploy
 
 - Staging: push to `main` (paths under `apps/api/**`) → [`.github/workflows/deploy-api.yml`](../../.github/workflows/deploy-api.yml)
 - Production: Actions → **Deploy API** → `workflow_dispatch` → `production` (protect the GitHub Environment)

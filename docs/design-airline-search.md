@@ -3,15 +3,14 @@
 | Field | Value |
 |-------|-------|
 | **Document** | System Design — WingSaver Full-Stack Airline Search |
-| **Author** | Engineering (placeholder) — assign named owner before leaving Draft |
-| **Reviewers** | TBD (assign before implementation kickoff) |
+| **Author** | Mohammad Sadnan Al Manir |
 | **Date** | 2026-08-01 |
-| **Status** | Draft |
-| **Target MVP milestone** | Mock search + results + detail + Redis cache deployable on FastAPI Cloud + Vercel (accounts/Amadeus post-MVP); target date TBD by product |
-| **Success metrics owner** | TBD (product + eng lead); draft metrics: search success rate, p95 latency, provider error rate, cache hit ratio |
-| **Workspace** | `/Users/sadnan/Documents/GitHub/WingSaver` (greenfield; empty `main`, no commits) |
+| **Status** | Active (MVP search path implemented; accounts / live provider post-MVP) |
+| **Target MVP milestone** | Mock search + results + detail + Redis cache deployable on FastAPI Cloud + Vercel |
+| **Success metrics (draft)** | Search success rate, p95 latency, provider error rate, cache hit ratio |
+| **Repository** | [sadnanalmanir/WingSaver](https://github.com/sadnanalmanir/WingSaver) |
 | **Deploy targets** | Backend: [FastAPI Cloud](https://fastapicloud.com/); Frontend: [Vercel](https://vercel.com/) |
-| **Revision** | 2026-08-01 r4 — product answers: invite-only registration, provider-native currency, post-MVP refresh revoke |
+| **Revision** | 2026-08-04 — recruit polish; MVP search shipped on `main` |
 
 ---
 
@@ -27,7 +26,7 @@ This design defines a monorepo, adapter-based flight inventory (mock seed for MV
 
 ### Current state
 
-- Empty Git repository on `main` with no application code or commits.
+- Monorepo on `main` with FastAPI API, Next.js web, OpenAPI package, CI/CD, and mock search MVP.
 - Product requirement: searchable flight inventory with production-grade API and modern web UX.
 - Hard constraints: Python backend, React frontend, FastAPI Cloud + Vercel deploy paths.
 

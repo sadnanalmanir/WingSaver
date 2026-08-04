@@ -8,6 +8,8 @@ version = "0.1.0"
 description = "WingSaver airline search API"
 readme = "README.md"
 requires-python = ">=3.12"
+license = "MIT"
+authors = [{ name = "Mohammad Sadnan Al Manir", email = "sadnanalmanir@gmail.com" }]
 dependencies = [
   "fastapi[standard]>=0.115.0",
   "pydantic-settings>=2.0",
