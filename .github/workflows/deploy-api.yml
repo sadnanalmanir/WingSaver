@@ -46,10 +46,12 @@ jobs:
       run:
         working-directory: apps/api
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
 
@@ -65,16 +67,15 @@ jobs:
           FASTAPI_CLOUD_APP_ID: ${{ secrets.FASTAPI_CLOUD_APP_ID }}
         run: |
           if [ -z "$FASTAPI_CLOUD_TOKEN" ]; then
-            echo "::error::FASTAPI_CLOUD_TOKEN secret is not set for the staging environment (or repository)."
+            echo "::error::FASTAPI_CLOUD_TOKEN is missing. Create a Deploy Token in FastAPI Cloud → app → Deploy Tokens, then add it as a GitHub Actions secret (repo or staging environment)."
             exit 1
           fi
-          # Deploy from apps/api (entrypoint wingsaver_api.main:app).
-          # Optional FASTAPI_CLOUD_APP_ID selects the staging app explicitly.
-          ARGS=()
-          if [ -n "$FASTAPI_CLOUD_APP_ID" ]; then
-            ARGS+=(--app-id "$FASTAPI_CLOUD_APP_ID")
+          if [ -z "$FASTAPI_CLOUD_APP_ID" ]; then
+            echo "::error::FASTAPI_CLOUD_APP_ID is missing. Copy the app UUID from the FastAPI Cloud dashboard header (not the app name/slug)."
+            exit 1
           fi
-          uv run fastapi deploy --no-wait "${ARGS[@]}"
+          # Deploy from apps/api (entrypoint wingsaver_api.main:app)
+          uv run fastapi deploy --no-wait --app-id "$FASTAPI_CLOUD_APP_ID"
 
       - name: Post-deploy checklist (manual)
         run: |
@@ -93,10 +94,12 @@ jobs:
       run:
         working-directory: apps/api
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
 
@@ -112,11 +115,11 @@ jobs:
           FASTAPI_CLOUD_APP_ID: ${{ secrets.FASTAPI_CLOUD_APP_ID }}
         run: |
           if [ -z "$FASTAPI_CLOUD_TOKEN" ]; then
-            echo "::error::FASTAPI_CLOUD_TOKEN secret is not set for the production environment."
+            echo "::error::FASTAPI_CLOUD_TOKEN is missing for the production environment."
             exit 1
           fi
-          ARGS=()
-          if [ -n "$FASTAPI_CLOUD_APP_ID" ]; then
-            ARGS+=(--app-id "$FASTAPI_CLOUD_APP_ID")
+          if [ -z "$FASTAPI_CLOUD_APP_ID" ]; then
+            echo "::error::FASTAPI_CLOUD_APP_ID is missing for the production environment."
+            exit 1
           fi
-          uv run fastapi deploy --no-wait "${ARGS[@]}"
+          uv run fastapi deploy --no-wait --app-id "$FASTAPI_CLOUD_APP_ID"

@@ -5,7 +5,7 @@
 | App | Host | Deploy root | Default CD |
 |-----|------|-------------|------------|
 | API | [FastAPI Cloud](https://fastapicloud.com/) | `apps/api` | GitHub Actions → `fastapi deploy` |
-| Web | [Vercel](https://vercel.com/) | `apps/web` (Vite SPA) | Vercel Git integration (preferred) |
+| Web | [Vercel](https://vercel.com/) | `apps/web` (Next.js) | Vercel Git integration (preferred) |
 
 Design default (v1): **Actions + `FASTAPI_CLOUD_TOKEN`** for API; **Vercel Git** for web.
 
@@ -32,11 +32,22 @@ Design default (v1): **Actions + `FASTAPI_CLOUD_TOKEN`** for API; **Vercel Git**
 | `TRUSTED_PROXY_HOPS` | `1` until verified | verified value | no |
 | `AUTH_REGISTRATION_ENABLED` | `false` | `false` | no |
 
-5. Create a CLI token and store as GitHub secret **`FASTAPI_CLOUD_TOKEN`**:
-   - Repository secret, **or**
-   - Per-environment secret under Environments `staging` / `production`.
-6. Optional but recommended: set **`FASTAPI_CLOUD_APP_ID`** per environment so staging and production deploy to different FastAPI Cloud apps (`--app-id`).
+5. Create a **Deploy Token** (not a random API key / personal browser session):
+   - FastAPI Cloud dashboard → your app → **Deploy Tokens** → **Create Token**
+   - Or locally (after `uv run fastapi login`): `uv run fastapi cloud setup-ci`
+   - Copy the token **once** (it is only shown at creation).
+6. GitHub → repo **Settings → Secrets and variables → Actions**:
+   - `FASTAPI_CLOUD_TOKEN` = that deploy token (exact paste, no quotes/spaces/newlines)
+   - `FASTAPI_CLOUD_APP_ID` = app ID from the dashboard (recommended)
+   - If the workflow uses GitHub **Environments** (`staging` / `production`), put secrets on **that environment**, not only as repo secrets — environment secrets override empty env lookups.
 7. Protect `production` environment with required reviewers (GitHub → Settings → Environments).
+
+**“The specified token is not valid”** usually means:
+- Wrong secret name / typo
+- Expired or revoked deploy token → create a new one
+- Login/session cookie used instead of a **Deploy Token**
+- Secret set on repo but job uses `environment: staging` and the env has an empty/old secret
+- Accidental whitespace or quotes when pasting into GitHub
 
 ### 2. GitHub Actions (API)
 
@@ -65,10 +76,9 @@ uv run fastapi deploy --no-wait
 | Setting | Value |
 |---------|--------|
 | Root Directory | `apps/web` |
-| Framework | Vite |
+| Framework | Next.js |
 | Production branch | `main` |
-| Output directory | `dist` |
-| Env `VITE_API_BASE_URL` | Staging/prod API HTTPS origin (no trailing slash) |
+| Env `NEXT_PUBLIC_API_BASE_URL` | Staging/prod API HTTPS origin (no trailing slash) |
 
 Previews deploy per PR automatically. Configure CORS on the API (`CORS_ORIGINS` + optional `CORS_ORIGIN_REGEX`) to allow the Vercel host(s).
 
@@ -105,7 +115,7 @@ Platform hop count is **not assumed final**. On first staging deploy:
 ### Web
 
 1. Open the Vercel URL.
-2. Confirm `VITE_API_BASE_URL` points at the staging API.
+2. Confirm `NEXT_PUBLIC_API_BASE_URL` points at the staging API.
 3. Browser network tab: search requests succeed (CORS OK).
 
 ---
