@@ -6,7 +6,9 @@ build-backend = "hatchling.build"
 name = "wingsaver-api"
 version = "0.1.0"
 description = "WingSaver airline search API"
-readme = "README.md"
+# Do not set readme= here: FastAPI Cloud builds fail if README is missing from
+# the upload bundle (ignore rules / monorepo packaging). Keep apps/api/README.md
+# in the repo for humans; packaging does not require it.
 # Pin 3.12.x for FastAPI Cloud image builds (avoid latest CPython surprises)
 requires-python = ">=3.12,<3.13"
 license = "MIT"

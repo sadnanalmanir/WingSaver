@@ -1,4 +1,5 @@
-# Keep FastAPI Cloud uploads lean when deploying from apps/api
+# Keep FastAPI Cloud uploads lean when deploying from apps/api.
+# Never ignore files required by packaging (pyproject.toml, src/, uv.lock).
 .venv/
 dist/
 __pycache__/
@@ -13,14 +14,3 @@ scripts/
 .env.*
 uv.lock.bak
 **/.DS_Store
-
-# Do NOT ignore README.md — pyproject.toml has readme = "README.md"
-# and hatchling fails the cloud image build if it is missing.
-# Ignore other markdown docs only:
-*.md
-!README.md
-
-# Pin runtime via .python-version (requires-python is ">=3.12"; without this
-# the platform may pick a very new CPython and unexpected dependency builds)
-# Keep .python-version uploaded:
-# (do not list .python-version here)
